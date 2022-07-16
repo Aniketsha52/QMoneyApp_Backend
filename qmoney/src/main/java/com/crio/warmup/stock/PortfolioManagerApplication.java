@@ -1,6 +1,8 @@
 
 package com.crio.warmup.stock;
 
+import com.crio.warmup.stock.dto.AnnualizedReturn;
+import com.crio.warmup.stock.dto.Candle;
 import com.crio.warmup.stock.dto.PortfolioTrade;
 import com.crio.warmup.stock.dto.TiingoCandle;
 import com.crio.warmup.stock.dto.TotalReturnsDto;
@@ -12,6 +14,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -53,6 +56,15 @@ public class PortfolioManagerApplication {
     }
     return list;
   }
+
+
+
+  // TODO: CRIO_TASK_MODULE_CALCULATIONS
+  //  Now that you have the list of PortfolioTrade and their data, calculate annualized returns
+  //  for the stocks provided in the Json.
+  //  Use the function you just wrote #calculateAnnualizedReturns.
+  //  Return the list of AnnualizedReturns sorted by annualizedReturns in descending order.
+
   // Note:
   // 1. You may need to copy relevant code from #mainReadQuotes to parse the Json.
   // 2. Remember to get the latest quotes from Tiingo API.
@@ -182,19 +194,130 @@ public class PortfolioManagerApplication {
   // TODO:
   //  Build the Url using given parameters and use this function in your code to cann the API.
   public static String prepareUrl(PortfolioTrade trade, LocalDate endDate, String token) {
-    String uri = "https://api.tiingo.com/tiingo/daily/" + trade.getSymbol()
-        + "/prices?startDate=" + trade.getPurchaseDate().toString()
-        + "&endDate=" + endDate + "&token=" + token;
-     return uri;
+    String uri = "https://api.tiingo.com/tiingo/daily/" + trade.getSymbol() + "/prices?startDate="
+        + trade.getPurchaseDate().toString() + "&endDate=" + endDate + "&token=" + token;
+    return uri;
+  }
+
+ 
+
+  // TODO:
+  //  Ensure all tests are passing using below command
+  //  ./gradlew test --tests ModuleThreeRefactorTest
+  public static Double getOpeningPriceOnStartDate(List<Candle> candles) {
+    Candle stockStartDate = candles.get(0);
+    double openPrice = stockStartDate.getOpen();
+    return openPrice;
   }
 
 
+  public static Double getClosingPriceOnEndDate(List<Candle> candles) {
+    Candle stockLatest = candles.get(candles.size() - 1);
+    double closePrice = stockLatest.getClose();
+    return closePrice;
+  }
 
 
+  public static List<Candle> fetchCandles(PortfolioTrade trade, LocalDate endDate, String token) {
+    ArrayList<Candle> candlesList = new ArrayList<>();
+    String URL = prepareUrl(trade, endDate, token);
+    TiingoCandle[] tingoCandles = new RestTemplate().getForObject(URL, TiingoCandle[].class);
+    for (TiingoCandle tc : tingoCandles) {
+      candlesList.add(tc);
+    }
+     return candlesList;
+  }
 
+  public static List<AnnualizedReturn> mainCalculateSingleReturn(String[] args)
+      throws IOException, URISyntaxException {
+    List<AnnualizedReturn> annualizedReturns = new ArrayList<>();
+    LocalDate endlocalDate = LocalDate.parse(args[1]);
 
+    File trades = resolveFileFromResources(args[0]);
+    ObjectMapper objectMapper = getObjectMapper();
 
+    PortfolioTrade[] tradesJson = objectMapper.readValue(trades, PortfolioTrade[].class);
 
+    for (int i = 0; i < tradesJson.length; i++) {
+      annualizedReturns.add(getAnnualizedReturn(tradesJson[i], endlocalDate));
+    }
+
+    //sort in Dccending order
+    Comparator<AnnualizedReturn> SortByAnnReturn = Comparator.comparing(AnnualizedReturn::getAnnualizedReturn)
+        .reversed();
+      Collections.sort(annualizedReturns,SortByAnnReturn);
+     return annualizedReturns;
+  }
+
+  // TODO: CRIO_TASK_MODULE_CALCULATIONS
+  //  Return the populated list of AnnualizedReturn for all stocks.
+  //  Annualized returns should be calculated in two steps:
+  //   1. Calculate totalReturn = (sell_value - buy_value) / buy_value.
+  //      1.1 Store the same as totalReturns
+  //   2. Calculate extrapolated annualized returns by scaling the same in years span.
+  //      The formula is:
+  //      annualized_returns = (1 + total_returns) ^ (1 / total_num_years) - 1
+  //      2.1 Store the same as annualized_returns
+  //  Test the same using below specified command. The build should be successful.
+  //     ./gradlew test --tests PortfolioManagerApplicationTest.testCalculateAnnualizedReturn
+
+  public static AnnualizedReturn calculateAnnualizedReturns(LocalDate endDate,
+      PortfolioTrade trade, Double buyPrice, Double sellPrice) {
+
+    Double absReturn = (sellPrice - buyPrice) / buyPrice;
+
+    String symbol = trade.getSymbol();
+    LocalDate purchaseDate = trade.getPurchaseDate();
+
+    // calculate years
+    Double numYers = (double) ChronoUnit.DAYS.between(purchaseDate, endDate) / 364.24;
+
+    Double annualizedReturns = Math.pow((1 + absReturn), (1 / numYers)) - 1;
+
+    return new AnnualizedReturn(symbol, annualizedReturns, absReturn);
+  }
+  
+  public static AnnualizedReturn getAnnualizedReturn(PortfolioTrade trade,
+      LocalDate endLocalDate) {
+
+    String ticker = trade.getSymbol();
+    LocalDate startLocalDate = trade.getPurchaseDate();
+
+    //create a url for API call
+    //Token is class Varible
+    String uri = String.format(
+        "https://api.tiingo.com/tiingo/daily/%s/prices?" + "startDate=%s&endDate=%s&token=%s",
+        ticker, startLocalDate.toString(), endLocalDate.toString(), TOKEN);
+
+    RestTemplate restTemplate = new RestTemplate();
+
+    //api return a list of result for eachday closing details
+    TiingoCandle[] stockStartToEndDate = restTemplate.getForObject(uri, TiingoCandle[].class);
+
+    //extract stocks for startDate & end Date
+    if (stockStartToEndDate != null) {
+      TiingoCandle stockStartDate = stockStartToEndDate[0];
+      TiingoCandle stockLatest = stockStartToEndDate[stockStartToEndDate.length - 1];
+
+      double buyPrice = stockStartDate.getOpen();
+      double sellPrice = stockLatest.getClose();
+
+      AnnualizedReturn annualizedReturn =
+          calculateAnnualizedReturns(endLocalDate, trade, buyPrice, sellPrice);
+      
+      return annualizedReturn;
+    } else {
+      return new AnnualizedReturn(ticker, Double.NaN, Double.NaN);
+    }
+
+  }
+  
+  public static final String TOKEN = "eed33cabecc6d884ec7655873c757bdc5d6affa6";
+  
+
+  public static String getToken() {
+    return TOKEN;
+  }
 
 
   public static void main(String[] args) throws Exception {
@@ -205,7 +328,9 @@ public class PortfolioManagerApplication {
 
     printJsonObject(mainReadQuotes(args));
 
+    printJsonObject(mainCalculateSingleReturn(args));
 
   }
+
 }
 
