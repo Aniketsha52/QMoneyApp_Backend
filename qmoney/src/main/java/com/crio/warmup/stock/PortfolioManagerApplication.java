@@ -142,7 +142,7 @@ public class PortfolioManagerApplication {
     for (PortfolioTrade t : trades) {
       String uri = "https://api.tiingo.com/tiingo/daily/" + t.getSymbol() + "/prices?startDate="
           + t.getPurchaseDate().toString() + "&endDate=" + args[1]
-          + "&token=eed33cabecc6d884ec7655873c757bdc5d6affa6";
+          + "&token=3adb8bd633fd457f09b4d4f74e5e506f8acba793";
       TiingoCandle[] results = restTemplate.getForObject(uri, TiingoCandle[].class);
       if (results != null) {
         tests.add(new TotalReturnsDto(t.getSymbol(), results[results.length - 1].getClose()));
@@ -312,7 +312,7 @@ public class PortfolioManagerApplication {
 
   }
   
-  public static final String TOKEN = "eed33cabecc6d884ec7655873c757bdc5d6affa6";
+  public static final String TOKEN = "3adb8bd633fd457f09b4d4f74e5e506f8acba793";
   
 
   public static String getToken() {
