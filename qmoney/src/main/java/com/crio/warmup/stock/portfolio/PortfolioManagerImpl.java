@@ -1,11 +1,14 @@
 
 package com.crio.warmup.stock.portfolio;
 
+import static java.time.temporal.ChronoUnit.DAYS;
+import static java.time.temporal.ChronoUnit.SECONDS;
 
 import com.crio.warmup.stock.dto.AnnualizedReturn;
 import com.crio.warmup.stock.dto.Candle;
 import com.crio.warmup.stock.dto.PortfolioTrade;
 import com.crio.warmup.stock.dto.TiingoCandle;
+import com.crio.warmup.stock.exception.StockQuoteServiceException;
 import com.crio.warmup.stock.quotes.StockQuotesService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,7 +40,7 @@ public class PortfolioManagerImpl implements PortfolioManager {
 
 @Override
 public List<AnnualizedReturn> calculateAnnualizedReturn(List<PortfolioTrade> portfolioTrades,
-    LocalDate endDate) {
+    LocalDate endDate) throws StockQuoteServiceException {
   AnnualizedReturn annualizedReturn;
   List<AnnualizedReturn> annualizedReturns = new ArrayList<AnnualizedReturn>();
 
@@ -58,7 +61,7 @@ public List<AnnualizedReturn> calculateAnnualizedReturn(List<PortfolioTrade> por
 
   }
    
-  private AnnualizedReturn getAnnualizedReturn(PortfolioTrade trade, LocalDate endLocalDate) {
+  private AnnualizedReturn getAnnualizedReturn(PortfolioTrade trade, LocalDate endLocalDate) throws StockQuoteServiceException {
     AnnualizedReturn annualizedReturn;
     String symbol = trade.getSymbol();
     LocalDate startLocalDate = trade.getPurchaseDate();
@@ -131,7 +134,7 @@ public List<AnnualizedReturn> calculateAnnualizedReturn(List<PortfolioTrade> por
 
 
   public List<Candle> getStockQuote(String symbol, LocalDate from, LocalDate to)
-      throws JsonProcessingException {
+      throws JsonProcessingException, StockQuoteServiceException  {
     //get stock start date to end date
     // start adate = purachedate
     //throw error if start date not before end date
@@ -160,5 +163,7 @@ public List<AnnualizedReturn> calculateAnnualizedReturn(List<PortfolioTrade> por
   //  stockQuoteService provided via newly added constructor of the class.
   //  You also have a liberty to completely get rid of that function itself, however, make sure
   //  that you do not delete the #getStockQuote function.
+
+
 
 }

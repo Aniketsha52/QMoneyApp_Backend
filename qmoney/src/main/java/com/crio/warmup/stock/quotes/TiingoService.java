@@ -3,6 +3,7 @@ package com.crio.warmup.stock.quotes;
 
 import com.crio.warmup.stock.dto.Candle;
 import com.crio.warmup.stock.dto.TiingoCandle;
+import com.crio.warmup.stock.exception.StockQuoteServiceException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -17,7 +18,7 @@ public class TiingoService implements StockQuotesService {
 
   @Override
   public List<Candle> getStockQuote(String symbol, LocalDate from, LocalDate to)
-      throws JsonProcessingException {
+      throws JsonProcessingException, StockQuoteServiceException{
     
     List<Candle> stockStartToEndDate;
     if (from.compareTo(to) >= 0) {
@@ -27,6 +28,7 @@ public class TiingoService implements StockQuotesService {
     // create url object for api call
     String url = buildUri(symbol, from, to);
 
+    try{
     String stocks = restTemplate.getForObject(url, String.class);
     ObjectMapper objectMapper = getObjectMapper();
 
@@ -38,6 +40,10 @@ public class TiingoService implements StockQuotesService {
     } else {
       stockStartToEndDate = Arrays.asList(new TiingoCandle[0]);
     }
+  } catch (NullPointerException e) {
+    throw new StockQuoteServiceException("Error occured when resquesting response from Tiingo API",
+        e.getCause());
+  }
 
     return stockStartToEndDate;
   }
@@ -79,5 +85,22 @@ public class TiingoService implements StockQuotesService {
     objectMapper.registerModule(new JavaTimeModule());
     return objectMapper;
   }
+
+
+
+
+
+
+  // TODO: CRIO_TASK_MODULE_EXCEPTIONS
+  //  1. Update the method signature to match the signature change in the interface.
+  //     Start throwing new StockQuoteServiceException when you get some invalid response from
+  //     Tiingo, or if Tiingo returns empty results for whatever reason, or you encounter
+  //     a runtime exception during Json parsing.
+  //  2. Make sure that the exception propagates all the way from
+  //     PortfolioManager#calculateAnnualisedReturns so that the external user's of our API
+  //     are able to explicitly handle this exception upfront.
+
+  //CHECKSTYLE:OFF
+
 
 }
