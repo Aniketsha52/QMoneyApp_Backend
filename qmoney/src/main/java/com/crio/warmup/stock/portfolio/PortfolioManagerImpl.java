@@ -1,13 +1,12 @@
 
 package com.crio.warmup.stock.portfolio;
 
-import static java.time.temporal.ChronoUnit.DAYS;
-import static java.time.temporal.ChronoUnit.SECONDS;
 
 import com.crio.warmup.stock.dto.AnnualizedReturn;
 import com.crio.warmup.stock.dto.Candle;
 import com.crio.warmup.stock.dto.PortfolioTrade;
 import com.crio.warmup.stock.dto.TiingoCandle;
+import com.crio.warmup.stock.quotes.StockQuotesService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -29,7 +28,12 @@ import org.springframework.web.client.RestTemplate;
 public class PortfolioManagerImpl implements PortfolioManager {
 
 
-private RestTemplate restTemplate;
+  private RestTemplate restTemplate;
+  private StockQuotesService stockQuotesService;
+
+  PortfolioManagerImpl(StockQuotesService stockQuotesService) {
+    this.stockQuotesService = stockQuotesService;
+  }
 
 @Override
 public List<AnnualizedReturn> calculateAnnualizedReturn(List<PortfolioTrade> portfolioTrades,
@@ -131,28 +135,13 @@ public List<AnnualizedReturn> calculateAnnualizedReturn(List<PortfolioTrade> por
     //get stock start date to end date
     // start adate = purachedate
     //throw error if start date not before end date
-    if (from.compareTo(to) >= 0) {
-      throw new RuntimeException();
-    }
-    
-    // create url object for api call
-    String url = buildUri(symbol, from, to);
-
-    // api returns a list of result each day stock data
-    TiingoCandle[] stockStartToEndDate = restTemplate.getForObject(url, TiingoCandle[].class);
-
-    if (stockStartToEndDate == null) {
-      return new ArrayList<Candle>();
-    }
-    List<Candle> stockList = Arrays.asList(stockStartToEndDate);
-
-    return stockList;
+    return stockQuotesService.getStockQuote(symbol, from, to);
   }
 
   protected String buildUri(String symbol, LocalDate startDate, LocalDate endDate) {
     String token = "3adb8bd633fd457f09b4d4f74e5e506f8acba793";
 
-       String uriTemplate = "https:api.tiingo.com/tiingo/daily/$SYMBOL/prices?"
+       String uriTemplate = "https://api.tiingo.com/tiingo/daily/$SYMBOL/prices?"
            + "startDate=$STARTDATE&endDate=$ENDDATE&token=$APIKEY";
       
       String url = uriTemplate.replace("$APIKEY", token).replace("$SYMBOL", symbol)
@@ -164,5 +153,12 @@ public List<AnnualizedReturn> calculateAnnualizedReturn(List<PortfolioTrade> por
   }
 
 
+
+
+  // ¶TODO: CRIO_TASK_MODULE_ADDITIONAL_REFACTOR
+  //  Modify the function #getStockQuote and start delegating to calls to
+  //  stockQuoteService provided via newly added constructor of the class.
+  //  You also have a liberty to completely get rid of that function itself, however, make sure
+  //  that you do not delete the #getStockQuote function.
 
 }

@@ -47,13 +47,13 @@ test {
 
 
 publishing {
-       publications {
-        maven(MavenPublication){  
-        groupId 'com.crio.warmup'
-        artifactId 'annual-return'
-        version '1.0.0'
-        from components.java
+    publications {
+        maven(MavenPublication){
+            groupId  'com.crio.warmup'
+            artifactId 'annual-return'
+            version '1.0.0'
+            from components.java
         }
-   }
+    }
 }
 
