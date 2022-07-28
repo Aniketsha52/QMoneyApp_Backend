@@ -1,4 +1,3 @@
-
 package com.crio.warmup.stock.portfolio;
 
 
@@ -114,9 +113,6 @@ public List<AnnualizedReturn> calculateAnnualizedReturn(List<PortfolioTrade> por
 
 
 
-
-
-
   private Comparator<AnnualizedReturn> getComparator() {
     return Comparator.comparing(AnnualizedReturn::getAnnualizedReturn).reversed();
   }
@@ -137,7 +133,7 @@ public List<AnnualizedReturn> calculateAnnualizedReturn(List<PortfolioTrade> por
   }
 
   protected String buildUri(String symbol, LocalDate startDate, LocalDate endDate) {
-    String token = "3adb8bd633fd457f09b4d4f74e5e506f8acba793";
+    String token = "eed33cabecc6d884ec7655873c757bdc5d6affa6";
 
     String uriTemplate = "https://api.tiingo.com/tiingo/daily/$SYMBOL/prices?"
         + "startDate=$STARTDATE&endDate=$ENDDATE&token=$APIKEY";

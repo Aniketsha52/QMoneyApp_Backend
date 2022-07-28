@@ -53,7 +53,7 @@ public class AlphavantageService implements StockQuotesService {
   //     be using configurations provided in the {@link @application.properties}.
   //  2. Use this method in #getStockQuote.
   public static final String TOKEN = "X29S6JCX995ENVZK";
-  public static final String FUNCTION = "TIME_SERIES_INTRADAY";
+  public static final String FUNCTION = "TIME_SERIES_DAILY";
 
   private RestTemplate restTemplate;
 
@@ -83,6 +83,7 @@ public class AlphavantageService implements StockQuotesService {
      try{
      String url = buildUri(symbol);
      String apiRespone = restTemplate.getForObject(url, String.class);
+     System.out.println(apiRespone);
 
      ObjectMapper mapper = getObjectMapper();
     dailyResponses = mapper.readValue(apiRespone, AlphavantageDailyResponse.class).getCandles();

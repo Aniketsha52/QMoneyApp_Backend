@@ -14,7 +14,7 @@ import org.springframework.web.client.RestTemplate;
 
 public class TiingoService implements StockQuotesService {
   private RestTemplate restTemplate;
-  public static final String token = "3adb8bd633fd457f09b4d4f74e5e506f8acba793";
+  public static final String token = "eed33cabecc6d884ec7655873c757bdc5d6affa6";
 
   @Override
   public List<Candle> getStockQuote(String symbol, LocalDate from, LocalDate to)
