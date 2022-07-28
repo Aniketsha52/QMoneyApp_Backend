@@ -10,8 +10,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
    //Reference - https:www.baeldung.com/jackson-ignore-properties-on-serialization
    //Reference - https:www.baeldung.com/jackson-name-of-property
-   @JsonIgnoreProperties(ignoreUnknown = true)
-public class AlphavantageCandle implements Candle {
+  @JsonIgnoreProperties(ignoreUnknown = true)
+  public class AlphavantageCandle implements Candle {
   @JsonProperty("1. open")
   private Double open;
 
