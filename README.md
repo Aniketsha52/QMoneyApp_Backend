@@ -1,5 +1,5 @@
 # QMoneyApp_Backend
-# QIntrodution
+# Introdution
 QMoney is a visual stock portfolio analyzer. It helps portfolio managers make trade recommendations for their clients.
 
 During the course of this project,
